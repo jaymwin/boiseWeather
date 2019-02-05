@@ -4,29 +4,35 @@
 # station’s minimum temperature records from 1961 to 1990 using a five-day window centered on 
 # each day (Caesar et al. 2006). 
 
-# Nov - Feb
+# Winter = Nov-Feb
+# Spring = Mar-Apr
 
 # Finally, we used daily minimum temperature
 # anomaly data from the HadGHCND station nearest the
 # southwestern Idaho kestrel population to examine changes
 # in winter and spring minimum temperatures from 1987 to
-# 2009. Spring months were defined as March and April 
+# 2009. 
 
 # 1) five-day window
 # 2) daily means 1961 to 1990 (is this 30 years?)
+# 3) calculate daily anomalies
+# 4) average winter anomalies and spring anomalies
 
+library(tidyverse)
+library(lubridate)
 library(zoo)
 
+dailyTemps <- read_csv(here('data/tmin1959-2018.csv'))
 
 # 5-day moving window -----------------------------------------------------
 
-# use 'rollmean' function
+# use 'rollmean' function to calculate moving average
 dailyTemps <- dailyTemps %>% 
   mutate(rollval = rollmean(value, k = 5, fill = NA)) 
 
-
 # 30-yr average (1961-1990) for each day ----------------------------------
 
+# add year and julian date variables
 dailyTemps <- dailyTemps %>%
   mutate(
     jday = yday(date),
@@ -34,50 +40,85 @@ dailyTemps <- dailyTemps %>%
   )
 dailyTemps
 
+# get these calculating 30-yr averages
 thirtyYearSpan <- dailyTemps %>%
   filter(
-    year > 1959 & year < 1991
+    year > 1960 & year < 1991 # 1961-1990
   )
 thirtyYearSpan
 
-thirtyYearSpan <- thirtyYearSpan %>%
+# average for each julian day, 1961-1990
+thirtyYearAvg <- thirtyYearSpan %>%
   group_by(jday) %>%
   mutate(avg1961_1990 = mean(rollval, na.rm = TRUE)) %>%
   select(jday, avg1961_1990) %>%
   ungroup()
-thirtyYearSpan
+thirtyYearAvg
 
+# difference of daily rolling average to calculate daily anomaly
 dailyTempAnoms <- dailyTemps %>%
-  left_join(., thirtyYearSpan, by = 'jday') %>%
+  left_join(., thirtyYearAvg, by = 'jday') %>%
   distinct(.) %>%
   mutate(anom = rollval - avg1961_1990)
 dailyTempAnoms
 
-dailyTempAnoms <- dailyTempAnoms %>%
+
+# winter anomalies --------------------------------------------------------
+
+# select november, december, january, february
+dailyWinterAnoms <- dailyTempAnoms %>%
   mutate(month = month(date)) %>%
   filter(month %in% c(11, 12, 1, 2))
+dailyWinterAnoms
 
-dailyTempAnoms <- dailyTempAnoms %>%
+# associate november and december with the next year...so Nov & Dec 2015 is included in winter 2016 average
+dailyWinterAnoms <- dailyWinterAnoms %>%
   mutate(
     winterYear = case_when(
       month %in% c(11, 12) ~ year + 1,
       TRUE ~ year
     )
-  ) 
+  )
+dailyWinterAnoms 
 
-dailyTempAnoms2 <- dailyTempAnoms %>%
+# average daily anomalies over winter months
+dailyWinterAnoms <- dailyWinterAnoms %>%
   group_by(winterYear) %>%
-  summarise(anom = mean(anom, na.rm = TRUE))
+  filter(winterYear > 1986 & winterYear < 2010) %>% # 1987-2009
+  summarise(anom = mean(anom))
+dailyWinterAnoms
 
-dailyTempAnoms2 %>%
-  filter(winterYear > 1990 & winterYear < 2019) %>%
+
+# spring anomalies --------------------------------------------------------
+
+dailySpringAnoms <- dailyTempAnoms %>%
+  mutate(month = month(date)) %>%
+  filter(month %in% c(3, 4))
+dailySpringAnoms
+
+# average daily anomalies over spring months
+dailySpringAnoms <- dailySpringAnoms %>%
+  group_by(year) %>%
+  filter(year > 1986 & year < 2010) %>% # 1987-2009
+  summarise(anom = mean(anom))
+dailySpringAnoms
+
+
+# plot data ---------------------------------------------------------------
+
+# winter
+dailyWinterAnoms %>%
   ggplot(., aes(winterYear, anom)) +
     geom_line() +
     geom_smooth(method = 'lm')
 
-dailyTempAnoms2
-summary(lm(anom ~ winterYear, data = dailyTempAnoms2 %>% filter(winterYear > 1986 & winterYear < 2018)))
+# spring
+dailySpringAnoms %>%
+  ggplot(., aes(year, anom)) +
+  geom_line() +
+  geom_smooth(method = 'lm')
 
-dailyTempAnoms2 %>%
-  filter(winterYear > 1986 & winterYear < 2018) %>%
-  summarise(mean = mean(anom))
+
+# analyze data ------------------------------------------------------------
+
+
