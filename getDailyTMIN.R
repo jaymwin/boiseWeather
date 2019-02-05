@@ -79,4 +79,4 @@ dailyTemps %>%
       geom_line() +
       scale_color_viridis()
 
-ggsave(here('plots/allYears.png'), units = 'in', height = 4, width = 5)
+ggsave(here('plots/allYears.png'), units = 'in', height = 3, width = 6)
