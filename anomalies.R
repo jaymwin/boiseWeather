@@ -121,4 +121,11 @@ dailySpringAnoms %>%
 
 # analyze data ------------------------------------------------------------
 
+# winter
+# from Heath et al. 2012 (beta = 0.08, significant)
+summary(lm(anom ~ winterYear, data = dailyWinterAnoms)) # beta = 0.1321, significant
+
+# winter
+# from Heath et al. 2012 (beta = -0.04, not significant)
+summary(lm(anom ~ year, data = dailySpringAnoms)) # beta = 0.01535, not significant
 
