@@ -12,7 +12,7 @@ here <- here::here
 options(noaakey= "mMwtILsLTqlXCnQbELrXHkuKLFrCZEir") 
 
 # there are download restrictions from NOAA; need to download by year
-years <- seq(from = 1960, to = 2018, by = 1)
+years <- seq(from = 1959, to = 2018, by = 1)
 
 # create lists of start and end dates for each year
 years <- years %>%
@@ -61,7 +61,7 @@ dailyTemps <- tempsList %>%
   bind_rows() 
 
 dailyTemps %>%
-  write_csv(here('data/tmin1960-2018.csv'))
+  write_csv(here('data/tmin1959-2018.csv'))
 
 # plot it
 dailyTemps %>%
