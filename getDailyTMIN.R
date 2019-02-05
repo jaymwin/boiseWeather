@@ -3,6 +3,8 @@ library(tidyverse)
 library(here)
 library(rnoaa)
 library(lubridate)
+library(scales)
+library(viridis)
 
 # need this to use rnoaa
 options(noaakey= "mMwtILsLTqlXCnQbELrXHkuKLFrCZEir") 
@@ -67,3 +69,10 @@ dailyTemps %>%
   summarise(meanTMIN = mean(value)) %>%
     ggplot(., aes(jday, meanTMIN)) +
       geom_line()
+
+dailyTemps %>%
+  mutate(jday = yday(date)) %>%
+  mutate(year = year(date)) %>%
+  ggplot(., aes(jday, value, color = year)) +
+    geom_line() +
+    scale_color_viridis()
