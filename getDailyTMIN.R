@@ -2,6 +2,9 @@
 library(tidyverse)
 library(here)
 library(rnoaa)
+library(lubridate)
+
+# need this to use rnoaa
 options(noaakey= "mMwtILsLTqlXCnQbELrXHkuKLFrCZEir") 
 
 # there are download restrictions from NOAA; need to download by year
@@ -51,5 +54,16 @@ for (i in seq_along(startDates)) {
 
 # combine all temperatures and write to csv
 dailyTemps <- tempsList %>%
-  bind_rows() %>%
-  write_csv(here('data'))
+  bind_rows() 
+
+dailyTemps %>%
+  write_csv(here('data/tmin1960-2018.csv'))
+
+# plot it
+dailyTemps %>%
+  mutate(jday = yday(date)) %>%
+  mutate(year = year(date)) %>%
+  group_by(jday) %>%
+  summarise(meanTMIN = mean(value)) %>%
+    ggplot(., aes(jday, meanTMIN)) +
+      geom_line()
