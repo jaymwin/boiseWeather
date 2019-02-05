@@ -6,6 +6,8 @@ library(lubridate)
 library(scales)
 library(viridis)
 
+here <- here::here
+
 # need this to use rnoaa
 options(noaakey= "mMwtILsLTqlXCnQbELrXHkuKLFrCZEir") 
 
@@ -73,6 +75,8 @@ dailyTemps %>%
 dailyTemps %>%
   mutate(jday = yday(date)) %>%
   mutate(year = year(date)) %>%
-  ggplot(., aes(jday, value, color = year)) +
-    geom_line() +
-    scale_color_viridis()
+    ggplot(., aes(jday, value, color = year)) +
+      geom_line() +
+      scale_color_viridis()
+
+ggsave(here('plots/allYears.png'), units = 'in', height = 4, width = 5)
