@@ -1,5 +1,4 @@
 
-
 # Daily anomalies were the difference of each daily minimum temperature from a daily ‘base’ 
 # value (Caesar et al. 2006). Daily ‘base’ minimum temperatures were calculated for each climate 
 # station’s minimum temperature records from 1961 to 1990 using a five-day window centered on 
@@ -25,8 +24,6 @@ library(zoo)
 dailyTemps <- dailyTemps %>% 
   mutate(rollval = rollmean(value, k = 5, fill = NA)) 
 
-tail(dailyTemps)
-
 
 # 30-yr average (1961-1990) for each day ----------------------------------
 
@@ -39,7 +36,7 @@ dailyTemps
 
 thirtyYearSpan <- dailyTemps %>%
   filter(
-    year > 1960 & year < 1991
+    year > 1959 & year < 1991
   )
 thirtyYearSpan
 
@@ -60,7 +57,6 @@ dailyTempAnoms <- dailyTempAnoms %>%
   mutate(month = month(date)) %>%
   filter(month %in% c(11, 12, 1, 2))
 
-
 dailyTempAnoms <- dailyTempAnoms %>%
   mutate(
     winterYear = case_when(
@@ -74,10 +70,14 @@ dailyTempAnoms2 <- dailyTempAnoms %>%
   summarise(anom = mean(anom, na.rm = TRUE))
 
 dailyTempAnoms2 %>%
-  filter(winterYear > 1986 & winterYear < 2010) %>%
+  filter(winterYear > 1990 & winterYear < 2019) %>%
   ggplot(., aes(winterYear, anom)) +
     geom_line() +
     geom_smooth(method = 'lm')
 
 dailyTempAnoms2
-summary(lm(anom ~ winterYear, data = dailyTempAnoms2 %>% filter(winterYear > 1986 & winterYear < 2010)))
+summary(lm(anom ~ winterYear, data = dailyTempAnoms2 %>% filter(winterYear > 1986 & winterYear < 2018)))
+
+dailyTempAnoms2 %>%
+  filter(winterYear > 1986 & winterYear < 2018) %>%
+  summarise(mean = mean(anom))
